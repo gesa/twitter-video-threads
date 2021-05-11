@@ -11,6 +11,7 @@
   },
   "keywords": [],
   "author": "Aki Rose <hi@akiro.se> (https://akiro.se/)",
+  "repository": "gesa/twitter-video-threads",
   "license": "ISC",
   "type": "module",
   "dependencies": {
