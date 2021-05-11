@@ -1,0 +1,15 @@
+logs
+*.log
+npm-debug.log*
+lib-cov
+coverage
+*.lcov
+node_modules/
+*.tsbuildinfo
+.npm
+.eslintcache
+.node_repl_history
+.env
+.cache
+dist/
+.cache/

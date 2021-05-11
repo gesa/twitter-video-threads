@@ -1,0 +1,10 @@
+{
+  "extends": ["prettier"],
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  }
+}
