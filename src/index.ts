@@ -76,6 +76,12 @@ async function fetchVideo(tweet: Tweet) {
   if (!tweet.extended_entities) {
     log.debug("Fetched tweet does not have any media associated with it");
 
+    if (tweet.quoted_status_id_str) {
+      log.debug(`Checking quoted tweet ${tweet.quoted_status_id_str}`);
+
+      await getTweetJson(tweet.quoted_status_id_str).then(fetchVideo);
+    }
+
     return tweet;
   }
 
@@ -93,18 +99,14 @@ async function fetchVideo(tweet: Tweet) {
   );
 
   if (!videoInfo) {
+    log.debug("Video info was not usable, moving on");
+
     return tweet;
   }
 
-  videoInfo.sort((a, b) => ((a?.bitrate ?? 0) < (b?.bitrate ?? 0) ? 1 : -1));
-
-  log.trace({
-    message: "Variants sorted",
-    additional: videoInfo.reduce(
-      (prev, current) => `${prev} ${current.bitrate},`,
-      "Bitrates: "
-    ),
-  });
+  videoInfo.sort((a: VideoVariant, b: VideoVariant) =>
+    (a.bitrate ?? 0) < (b.bitrate ?? 0) ? 1 : -1
+  );
 
   log.debug(`Spawning ffmpeg to download video from ${tweet.id_str}.`);
 
