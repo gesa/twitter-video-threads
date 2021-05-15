@@ -9,7 +9,6 @@ import { hideBin } from "yargs/helpers";
 import { Consola, default as consola } from "consola";
 import { Status as Tweet } from "twitter-d";
 import { VideoVariant } from "twitter-d/types/video_variant";
-import exp from "constants";
 
 interface Arguments {
   tweetID: string;
