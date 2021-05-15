@@ -39,49 +39,31 @@ async function handleCommand(argv: Arguments) {
 function downloadTweet(tweetID: string): Promise<void> {
   log.debug(`Fetching ${tweetID}.`);
 
-  return fetch(`https://api.twitter.com/1.1/statuses/show.json?id=${tweetID}`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${cliArgs["api-key"]}` },
-  })
-    .then((res) => res.json())
+  if (cliArgs["stop-at"] && tweetID === cliArgs["stop-at"]) {
+    reportExit({
+      message: `Reached the requested id after ${tweetCounter} tweets.`,
+      additional: "…exiting cleanly",
+    });
+
+    process.exit(0);
+  }
+
+  return getTweetJson(tweetID)
     .then(fetchVideo)
     .catch((error) => {
       log.error(error);
 
       process.exit(1);
     })
-    .then((tweet: Tweet) => {
-      tweetCounter++;
-
-      if (tweetCounter >= cliArgs.limit) {
-        log.success({
-          message: "Reached the limit of tweets processed",
-          additional: "…exiting cleanly",
-        });
-
-        process.exit(0);
-      }
-
-      if (tweet.in_reply_to_status_id_str) {
-        return tweet.in_reply_to_status_id_str;
-      }
-
-      if (cliArgs["stop-at"] && BigInt(tweetID) < BigInt(cliArgs["stop-at"])) {
-        log.success({
-          message: `Reached the requested id after ${tweetCounter} tweets.`,
-          additional: "…exiting cleanly",
-        });
-        process.exit(0);
-      }
-
-      log.success({
-        message: "Reached the beginning of the thread.",
-        additional: `Downloaded a total of ${tweetCounter} videos.`,
-      });
-
-      process.exit(0);
-    })
+    .then(findNextTweet)
     .then(downloadTweet);
+}
+
+function getTweetJson(tweetID: string): Promise<Tweet> {
+  return fetch(`https://api.twitter.com/1.1/statuses/show.json?id=${tweetID}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${cliArgs["api-key"]}` },
+  }).then((res) => res.json());
 }
 
 async function fetchVideo(tweet: Tweet) {
@@ -192,6 +174,51 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       resolve(tweet);
     });
   });
+}
+
+function findNextTweet(tweet: Tweet): string {
+  tweetCounter++;
+
+  if (tweetCounter >= cliArgs.limit) {
+    reportExit({
+      message: "Reached the limit of tweets processed",
+      additional: "…exiting cleanly",
+    });
+
+    process.exit(0);
+  }
+
+  if (tweet.in_reply_to_status_id_str) {
+    return tweet.in_reply_to_status_id_str;
+  }
+
+  reportExit({
+    message: "Reached the beginning of the thread.",
+    additional: `Downloaded a total of ${tweetCounter} videos.`,
+  });
+
+  process.exit(0);
+}
+
+function reportExit({
+  message,
+  additional,
+}: {
+  message: string;
+  additional: string | string[];
+}) {
+  const failuresLog = [...failedDownloads.entries()].map(
+    ([tweetID, reason]) => `${tweetID} (${reason})`
+  );
+
+  log.success({ message, additional });
+
+  if (failuresLog.length > 0) {
+    log.warn({
+      message: "The following tweets failed to download:",
+      additional: failuresLog,
+    });
+  }
 }
 
 export default function () {
