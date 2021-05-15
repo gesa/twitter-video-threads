@@ -159,9 +159,19 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       ffmpegReq.kill();
       failedDownloads.add(tweet.id_str);
       log.warn(`Failed to download ${tweet.id_str} (timeout)`);
+
+      resolve(tweet);
     }, 300000);
 
     ffmpegReq.stderr.on("data", (data) => {
+      if (data.includes("already exists. Overwrite? [y/N]")) {
+        log.warn(`${tweet.id_str} video already exists, moving on.`);
+
+        failedDownloads.set(tweet.id_str, "already exists");
+        ffmpegReq.kill();
+
+        resolve(tweet);
+      }
       fFmpegOutput.add(data);
       // TODO: check `data` for overwrite message
       log.trace(`${data}`);
@@ -171,7 +181,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       clearInterval(ffmpegCheckin);
       clearTimeout(ffmpegTimeout);
 
-      if (code && code === 0) {
+      if (code === 0) {
         log.debug(`ffmpeg finished ${tweet.id_str} exiting with code ${code}.`);
       } else {
         log.error(
