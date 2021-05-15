@@ -25,7 +25,7 @@ dotenv();
 let log: Consola,
   cliArgs: Arguments,
   tweetCounter = 0;
-const failedDownloads = new Set<string>();
+const failedDownloads = new Map<string, string>();
 
 async function handleCommand(argv: Arguments) {
   cliArgs = argv;
@@ -157,7 +157,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       fFmpegOutput.clear();
       clearInterval(ffmpegCheckin);
       ffmpegReq.kill();
-      failedDownloads.add(tweet.id_str);
+      failedDownloads.set(tweet.id_str, "timeout");
       log.warn(`Failed to download ${tweet.id_str} (timeout)`);
 
       resolve(tweet);
