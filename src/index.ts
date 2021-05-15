@@ -32,10 +32,11 @@ async function handleCommand(argv: Arguments) {
   log = consola.create({ level: 3 + argv.verbose });
 
   log.info("Started twitter thread downloads!");
-  await downloadTweetJson(argv.tweetID);
+
+  await downloadTweet(argv.tweetID);
 }
 
-function downloadTweetJson(tweetID: string): Promise<void> {
+function downloadTweet(tweetID: string): Promise<void> {
   log.debug(`Fetching ${tweetID}.`);
 
   return fetch(`https://api.twitter.com/1.1/statuses/show.json?id=${tweetID}`, {
@@ -80,7 +81,7 @@ function downloadTweetJson(tweetID: string): Promise<void> {
 
       process.exit(0);
     })
-    .then(downloadTweetJson);
+    .then(downloadTweet);
 }
 
 async function fetchVideo(tweet: Tweet) {
