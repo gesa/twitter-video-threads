@@ -1,6 +1,6 @@
 {
   "name": "twitter-video-threads",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Download all the videos from a twitter (tiktok) thread.",
   "main": "dist/index.js",
   "files": [
