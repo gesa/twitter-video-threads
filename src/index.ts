@@ -94,7 +94,7 @@ async function fetchVideo(tweet: Tweet) {
   });
 
   const videoInfo = tweet?.extended_entities?.media?.[0]?.video_info?.variants?.filter(
-    (variant: VideoVariant) => variant.bitrate !== undefined
+    (variant: VideoVariant) => variant.content_type === 'application/x-mpegURL'
   );
 
   if (!videoInfo) {
@@ -102,10 +102,6 @@ async function fetchVideo(tweet: Tweet) {
 
     return tweet;
   }
-
-  videoInfo.sort((a: VideoVariant, b: VideoVariant) =>
-    (a.bitrate ?? 0) < (b.bitrate ?? 0) ? 1 : -1
-  );
 
   log.debug(`Spawning ffmpeg to download video from ${tweet.id_str}.`);
 
