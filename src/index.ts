@@ -62,7 +62,7 @@ function downloadTweet(tweetID: string): Promise<void> {
 
   if (BigInt(tweetID) <= stopAtTweetInt) {
     reportExit({
-      message: `Reached or passed the requested id after ${tweetCounter} tweets.`,
+      message: `Reached or passed the requested id.`,
       additional: "…exiting cleanly",
     });
 
@@ -251,7 +251,7 @@ function findNextTweet(tweet: Tweet): string {
 
   if (tweetCounter >= cliArgs.limit) {
     reportExit({
-      message: "Reached the limit of tweets processed",
+      message: "Reached the limit of tweets to process",
       additional: "…exiting cleanly",
     });
 
@@ -264,7 +264,7 @@ function findNextTweet(tweet: Tweet): string {
 
   reportExit({
     message: "Reached the beginning of the thread.",
-    additional: `Downloaded a total of ${tweetCounter} videos.`,
+    additional: "",
   });
 
   process.exit(0);
@@ -289,6 +289,10 @@ function reportExit({
       additional: failuresLog,
     });
   }
+
+  log.info(
+    `Exiting after ${tweetCounter} videos successfully downloaded and ${failuresLog.length} failures.`
+  );
 }
 
 export default function () {
