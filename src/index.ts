@@ -1,8 +1,9 @@
 import { config as dotenv } from "dotenv";
 import { spawn } from "child_process";
 import { homedir } from "os";
-import * as path from "path";
-import * as util from "util";
+import { existsSync, mkdirSync } from "fs";
+import { join } from "path";
+import { inspect } from "util";
 import fetch, { Response } from "node-fetch";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -31,6 +32,20 @@ async function handleCommand(argv: Arguments) {
   cliArgs = argv;
   log = consola.create({ level: 3 + argv.verbose });
   stopAtTweetInt = argv["stop-at"] ? BigInt(argv["stop-at"]) : false;
+
+  if (!existsSync(argv.destination)) {
+    try {
+      mkdirSync(argv.destination, { recursive: true });
+    } catch (e) {
+      log.error({
+        message:
+          "Encountered an error attempting to create destination directory",
+        additional: e,
+      });
+
+      process.exit(1);
+    }
+  }
 
   log.info("Started twitter thread downloads!");
 
@@ -104,7 +119,7 @@ async function fetchVideo(tweet: Tweet) {
   log.success(`Fetched Tweet ${tweet.id_str}`);
   log.trace({
     message: "Here's some JSON.",
-    additional: util.inspect(tweet, { colors: true, depth: 10 }),
+    additional: inspect(tweet, { colors: true, depth: 10 }),
   });
 
   if (!tweet.extended_entities) {
@@ -122,7 +137,7 @@ async function fetchVideo(tweet: Tweet) {
   log.trace({
     message:
       "Making an assumption here that the TikTok video is the only media on the tweet",
-    additional: util.inspect(tweet.extended_entities.media, {
+    additional: inspect(tweet.extended_entities.media, {
       colors: true,
       depth: 10,
     }),
@@ -168,7 +183,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       ...metadata,
       "-c",
       "copy",
-      path.join(cliArgs.destination, `${tweet.id_str}.mp4`),
+      join(cliArgs.destination, `${tweet.id_str}.mp4`),
     ]);
     const fFmpegOutput = new Set<string>();
     const ffmpegCheckin = setInterval(() => {
@@ -295,7 +310,7 @@ export default function () {
     })
     .option("destination", {
       alias: "d",
-      default: path.join(homedir(), "Downloads"),
+      default: join(homedir(), "Downloads"),
       defaultDescription: "~/Downloads",
       describe: "Download destination folder for videos.",
       nargs: 1,
