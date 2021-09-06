@@ -7,7 +7,7 @@ import fetch, { Response } from "node-fetch";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Consola, default as consola } from "consola";
-import { Status as Tweet } from "twitter-d";
+import { isFullUser, Status as Tweet } from "twitter-d";
 import { VideoVariant } from "twitter-d/types/video_variant";
 
 interface Arguments {
@@ -128,9 +128,11 @@ async function fetchVideo(tweet: Tweet) {
     }),
   });
 
-  const videoInfo = tweet?.extended_entities?.media?.[0]?.video_info?.variants?.filter(
-    (variant: VideoVariant) => variant.content_type === 'application/x-mpegURL'
-  );
+  const videoInfo =
+    tweet.extended_entities.media?.[0].video_info?.variants?.filter(
+      (variant: VideoVariant) =>
+        variant.content_type === "application/x-mpegURL"
+    );
 
   if (!videoInfo) {
     log.debug("Video info was not usable, moving on");
@@ -144,10 +146,26 @@ async function fetchVideo(tweet: Tweet) {
 }
 
 function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
+  let metadata: string[] = [];
+
+  if (isFullUser(tweet.user)) {
+    metadata = [
+      "-metadata",
+      "media_type=0",
+      "-metadata",
+      `comment="${tweet.full_text.replace('"', '\\"')}"`,
+      "-metadata",
+      `thanks="${tweet.user.name} @${tweet.user.screen_name}"`,
+      "-metadata",
+      `acknowledgement="https://twitter.com/${tweet.user.name}/status/${tweet.id_str}/"`,
+    ];
+  }
+
   return new Promise((resolve) => {
     const ffmpegReq = spawn("ffmpeg", [
       "-i",
       url,
+      ...metadata,
       "-c",
       "copy",
       path.join(cliArgs.destination, `${tweet.id_str}.mp4`),
@@ -157,7 +175,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       log.debug(`ffmpeg still running on ${tweet.id_str}`);
       log.trace({
         message: "stderr so far",
-        additional: Array.from(fFmpegOutput.values()).join("\n"),
+        additional: [...fFmpegOutput].join("\n"),
       });
       fFmpegOutput.clear();
     }, 30000);
@@ -165,7 +183,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       log.debug(`${tweet.id_str} took too long, killing process.`);
       log.trace({
         message: "stderr remaining",
-        additional: Array.from(fFmpegOutput.values()).join("\n"),
+        additional: [...fFmpegOutput].join("\n"),
       });
 
       fFmpegOutput.clear();
@@ -187,7 +205,6 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
         resolve(tweet);
       }
       fFmpegOutput.add(data);
-      // TODO: check `data` for overwrite message
       log.trace(`${data}`);
     });
 
