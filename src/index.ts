@@ -8,8 +8,9 @@ import fetch, { Response } from "node-fetch";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Consola, default as consola } from "consola";
-import { isFullUser, Status as Tweet } from "twitter-d";
+import { Status as Tweet } from "twitter-d";
 import { VideoVariant } from "twitter-d/types/video_variant";
+import { FullUser, User } from "twitter-d/types/user";
 
 interface Arguments {
   tweetID: string;
@@ -18,6 +19,10 @@ interface Arguments {
   limit: number;
   "stop-at"?: string;
   verbose: number;
+}
+
+function isFullUser(user: User): user is FullUser {
+  return "screen_name" in user;
 }
 
 dotenv();
@@ -85,9 +90,10 @@ class HTTPResponseError extends Error {
 }
 
 function getTweetJson(tweetID: string): Promise<Tweet> {
-  return fetch(`https://api.twitter.com/1.1/statuses/show.json?id=${tweetID}`, {
-    headers: { Authorization: `Bearer ${cliArgs["api-key"]}` },
-  })
+  return fetch(
+    `https://api.twitter.com/1.1/statuses/show.json?id=${tweetID}&tweet_mode=extended`,
+    { headers: { Authorization: `Bearer ${cliArgs["api-key"]}` } }
+  )
     .then((res) => {
       if (res.ok) {
         return res.json() as Promise<Tweet>;
@@ -168,11 +174,11 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       "-metadata",
       "media_type=0",
       "-metadata",
-      `comment="${tweet.full_text.replace('"', '\\"')}"`,
+      `description="${tweet.full_text}"`,
       "-metadata",
-      `thanks="${tweet.user.name} @${tweet.user.screen_name}"`,
+      `comment="${tweet.user.name} @${tweet.user.screen_name}"`,
       "-metadata",
-      `acknowledgement="https://twitter.com/${tweet.user.name}/status/${tweet.id_str}/"`,
+      `synopsis="https://twitter.com/${tweet.user.screen_name}/status/${tweet.id_str}/"`,
     ];
   }
 
