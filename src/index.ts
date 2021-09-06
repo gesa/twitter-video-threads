@@ -23,12 +23,14 @@ dotenv();
 
 let log: Consola,
   cliArgs: Arguments,
-  tweetCounter = 0;
+  tweetCounter = 0,
+  stopAtTweetInt: BigInt | false;
 const failedDownloads = new Map<string, string>();
 
 async function handleCommand(argv: Arguments) {
   cliArgs = argv;
   log = consola.create({ level: 3 + argv.verbose });
+  stopAtTweetInt = argv["stop-at"] ? BigInt(argv["stop-at"]) : false;
 
   log.info("Started twitter thread downloads!");
 
@@ -38,9 +40,9 @@ async function handleCommand(argv: Arguments) {
 function downloadTweet(tweetID: string): Promise<void> {
   log.debug(`Fetching ${tweetID}.`);
 
-  if (cliArgs["stop-at"] && tweetID === cliArgs["stop-at"]) {
+  if (BigInt(tweetID) <= stopAtTweetInt) {
     reportExit({
-      message: `Reached the requested id after ${tweetCounter} tweets.`,
+      message: `Reached or passed the requested id after ${tweetCounter} tweets.`,
       additional: "…exiting cleanly",
     });
 
