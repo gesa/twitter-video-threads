@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.2.2
+## 0.3.1
+
+- Include types
+
+## 0.3.0
 
 - Update packages
   - Major version on dotenv & node-fetch
