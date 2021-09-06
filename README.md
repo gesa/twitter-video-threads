@@ -2,7 +2,13 @@
 
 _Because sometimes, you just want to dowload that entire TikTok thread and watch them all on the big screen._
 
+## Requirements
+
+expects to find ffmpeg, idk, somewhere in your path.  
+(TODO: add an option to specify ffmpeg location)
+
 ## Usage
+
 
 ```shell
 npx twitter-video-threads [options] <tweetID>
