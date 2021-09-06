@@ -27,6 +27,12 @@ function isFullUser(user: User): user is FullUser {
 
 dotenv();
 
+process.on("SIGINT", () => {
+  reportExit({ message: "SIGINT received", additional: "" });
+
+  process.exit(0);
+});
+
 let log: Consola,
   cliArgs: Arguments,
   tweetCounter = 0,
