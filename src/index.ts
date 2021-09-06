@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import { homedir } from "os";
 import * as path from "path";
 import * as util from "util";
-import fetch from "node-fetch";
+import fetch, { Response } from "node-fetch";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Consola, default as consola } from "consola";
@@ -60,11 +60,44 @@ function downloadTweet(tweetID: string): Promise<void> {
     .then(downloadTweet);
 }
 
+class HTTPResponseError extends Error {
+  private response: Response;
+  constructor(response: Response) {
+    super(`HTTP Error Response: ${response.status} ${response.statusText}`);
+
+    this.response = response;
+  }
+}
+
 function getTweetJson(tweetID: string): Promise<Tweet> {
   return fetch(`https://api.twitter.com/1.1/statuses/show.json?id=${tweetID}`, {
-    method: "GET",
     headers: { Authorization: `Bearer ${cliArgs["api-key"]}` },
-  }).then((res) => res.json());
+  })
+    .then((res) => {
+      if (res.ok) {
+        return res.json() as Promise<Tweet>;
+      }
+
+      failedDownloads.set(
+        tweetID,
+        `Download failed with a ${res.status} error.`
+      );
+
+      throw new HTTPResponseError(res);
+    })
+    .catch((error) => {
+      log.error({
+        message: `Failure downloading tweet`,
+        additional: [error.response.text()],
+      });
+
+      reportExit({
+        message: "Nothing left to download, exiting cleanly.",
+        additional: "Couldn't find next tweet in thread",
+      });
+
+      process.exit(1);
+    });
 }
 
 async function fetchVideo(tweet: Tweet) {
