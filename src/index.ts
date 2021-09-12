@@ -231,6 +231,15 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
 
         resolve(tweet);
       }
+
+      if (data.includes('HTTP error 416 Requested Range Not Satisfiable')) {
+        log.warn(`Received a 416 error on tweet ${tweet.id_str}, skipping`);
+        failedDownloads.set(tweet.id_str, "416 error");
+        ffmpegReq.kill();
+
+        resolve(tweet);
+      }
+
       fFmpegOutput.add(data);
       log.trace(`${data}`);
     });
