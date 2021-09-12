@@ -112,10 +112,10 @@ function getTweetJson(tweetID: string): Promise<Tweet> {
 
       throw new HTTPResponseError(res);
     })
-    .catch((error) => {
+    .catch(async (error) => {
       log.error({
         message: `Failure downloading tweet`,
-        additional: [error.response.text()],
+        additional: [await error.response.text()],
       });
 
       reportExit({
