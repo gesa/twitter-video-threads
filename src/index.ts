@@ -180,7 +180,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       "-metadata",
       "media_type=0",
       "-metadata",
-      `description="${tweet.full_text}"`,
+      `title="${tweet.full_text}"`,
       "-metadata",
       `comment="${tweet.user.name} @${tweet.user.screen_name}"`,
       "-metadata",
