@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- Add new option: "through-date", to give downloads a hard stop after (well, before, actually) a certain date
+
 ## 0.3.4
 
 - Same as last tag, but better

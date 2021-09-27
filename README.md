@@ -13,20 +13,28 @@ expects to find ffmpeg, idk, somewhere in your path.
 ```shell
 npx twitter-video-threads [options] <tweetID>
 
+Fetch all videos from a Twitter (TikTok) thread
+
 Positionals:
 tweetID  The ID of the most recent tweet to begin working backward from
 [string]
 
 Options:
---version         Show version number                                         [boolean]
--k, --api-key     Your Twitter API key                                        [string] [required]
-                  (will overwrite env variable `TWITTER_API_KEY`)
--d, --destination Download destination folder for videos.                     [string] [default: ~/Downloads]
--l, --limit       Limit the total number of tweets to process.                [number] [default: Infinity]
--s, --stop-at     A tweet ID at which point to stop recursively downloading.  [string]
-                  Helpful if you’ve already downloaded this thread before.
--v, --verbose     Chatty logs. More "v"s for more logging.                    [count] [default: 0]
---help            Show help                                                   [boolean]
+      --version       Show version number                              [boolean]
+  -k, --api-key       Your Twitter API key (will overwrite env variable `TWITTER
+                      _API_KEY`)                             [string] [required]
+  -d, --destination   Download destination folder for videos.
+                                                 [string] [default: ~/Downloads]
+  -l, --limit         Limit the total number of tweets to process.
+                                                    [number] [default: Infinity]
+  -s, --stop-at       A tweet ID at which point to stop recursively downloading.
+                       Helpful if you've already downloaded this thread before.
+                                                                        [string]
+      --through-date  A date through which to download. Format as YYYY-MM-DD or
+                      any other string Date.parse can make sense of.    [string]
+  -v, --verbose       Chatty logs. More "v"s for more logging.
+                                                            [count] [default: 0]
+      --help          Show help                                        [boolean]
 ```
 
 ### Some examples
