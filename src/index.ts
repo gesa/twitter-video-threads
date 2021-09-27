@@ -18,6 +18,7 @@ interface Arguments {
   destination: string;
   limit: number;
   "stop-at"?: string;
+  "through-date": Date;
   verbose: number;
 }
 
@@ -116,6 +117,18 @@ function getTweetJson(tweetID: string): Promise<Tweet> {
       );
 
       throw new HTTPResponseError(res);
+    })
+    .then((resJson) => {
+      if (new Date(resJson.created_at) < cliArgs["through-date"]) {
+        reportExit({
+          message: "Reached the earliest target date for downloading",
+          additional: "…exiting cleanly",
+        });
+
+        process.exit(0);
+      }
+
+      return resJson;
     })
     .catch((error) =>
       error.response.json().then(({ errors }: { errors: TwitterError[] }) => {
@@ -348,6 +361,7 @@ export default function () {
       defaultDescription: "~/Downloads",
       describe: "Download destination folder for videos.",
       nargs: 1,
+      normalize: true,
       type: "string",
     })
     .option("limit", {
@@ -362,6 +376,14 @@ export default function () {
       describe:
         "A tweet ID at which point to stop recursively downloading. Helpful if you've already downloaded this thread before.",
       nargs: 1,
+      type: "string",
+    })
+    .option("through-date", {
+      coerce: Date.parse,
+      describe:
+        "A date through which to download. Format as YYYY-MM-DD or any other string Date.parse can make sense of.",
+      nargs: 1,
+      requiresArg: true,
       type: "string",
     })
     .option("verbose", {
