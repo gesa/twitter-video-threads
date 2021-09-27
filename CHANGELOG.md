@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.4
+
+- Same as last tag, but better
+
+## 0.3.3
+
+- Fix mishandled promise on http error handling
+
+## 0.3.2
+
+- Improve HTTP error handling
+- Better metadata on video file
+
 ## 0.3.1
 
 - Include types
