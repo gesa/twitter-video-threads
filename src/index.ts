@@ -21,6 +21,11 @@ interface Arguments {
   verbose: number;
 }
 
+interface TwitterError {
+  code: string;
+  message: string;
+}
+
 function isFullUser(user: User): user is FullUser {
   return "screen_name" in user;
 }
@@ -112,19 +117,23 @@ function getTweetJson(tweetID: string): Promise<Tweet> {
 
       throw new HTTPResponseError(res);
     })
-    .catch(async (error) => {
-      log.error({
-        message: `Failure downloading tweet`,
-        additional: [await error.response.text()],
-      });
+    .catch((error) =>
+      error.response.json().then(({ errors }: { errors: TwitterError[] }) => {
+        const { code, message } = errors[0];
 
-      reportExit({
-        message: "Nothing left to download, exiting cleanly.",
-        additional: "Couldn't find next tweet in thread",
-      });
+        log.error({
+          message: `Failure downloading tweet`,
+          additional: [`Error code ${code}`, message],
+        });
 
-      process.exit(1);
-    });
+        reportExit({
+          message: "Nothing left to download, exiting cleanly.",
+          additional: "Couldn't find next tweet in thread",
+        });
+
+        process.exit(1);
+      })
+    );
 }
 
 async function fetchVideo(tweet: Tweet) {
@@ -232,7 +241,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
         resolve(tweet);
       }
 
-      if (data.includes('HTTP error 416 Requested Range Not Satisfiable')) {
+      if (data.includes("HTTP error 416 Requested Range Not Satisfiable")) {
         log.warn(`Received a 416 error on tweet ${tweet.id_str}, skipping`);
         failedDownloads.set(tweet.id_str, "416 error");
         ffmpegReq.kill();
