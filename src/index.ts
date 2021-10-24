@@ -152,7 +152,7 @@ function getTweetJson(tweetID: string): Promise<Tweet> {
 async function fetchVideo(tweet: Tweet) {
   log.success(`Fetched Tweet ${tweet.id_str}`);
   log.trace({
-    message: "Here's some JSON.",
+    message: "Here's the raw JSON response.",
     additional: inspect(tweet, { colors: true, depth: 10 }),
   });
 
@@ -199,6 +199,8 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
 
   if (isFullUser(tweet.user)) {
     metadata = [
+      "-metadata",
+      "keywords='TikTok'",
       "-metadata",
       "media_type=0",
       "-metadata",
