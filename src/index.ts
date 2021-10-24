@@ -4,13 +4,14 @@ import { homedir } from "os";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { inspect } from "util";
-import fetch, { Response } from "node-fetch";
+import fetch from "node-fetch";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Consola, default as consola } from "consola";
 import { Status as Tweet } from "twitter-d";
 import { VideoVariant } from "twitter-d/types/video_variant";
-import { FullUser, User } from "twitter-d/types/user";
+import { HTTPResponseError } from "./errors";
+import { calculateHDVideo, isFullUser } from "./util";
 
 interface Arguments {
   tweetID: string;
@@ -25,10 +26,6 @@ interface Arguments {
 interface TwitterError {
   code: string;
   message: string;
-}
-
-function isFullUser(user: User): user is FullUser {
-  return "screen_name" in user;
 }
 
 dotenv();
@@ -86,19 +83,15 @@ function downloadTweet(tweetID: string): Promise<void> {
     .catch((error) => {
       log.error(error);
 
+      reportExit({
+        message: "Unexpected failure fetching video",
+        additional: "see logged error(s)",
+      });
+
       process.exit(1);
     })
     .then(findNextTweet)
     .then(downloadTweet);
-}
-
-class HTTPResponseError extends Error {
-  private response: Response;
-  constructor(response: Response) {
-    super(`HTTP Error Response: ${response.status} ${response.statusText}`);
-
-    this.response = response;
-  }
 }
 
 function getTweetJson(tweetID: string): Promise<Tweet> {
@@ -209,6 +202,10 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
       `comment="${tweet.user.name} @${tweet.user.screen_name}"`,
       "-metadata",
       `synopsis="https://twitter.com/${tweet.user.screen_name}/status/${tweet.id_str}/"`,
+      "-metadata",
+      `hd_video=${calculateHDVideo(
+        tweet.extended_entities?.media?.[0].sizes.large
+      )}`,
     ];
   }
 
