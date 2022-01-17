@@ -10,8 +10,8 @@ import { hideBin } from "yargs/helpers";
 import { Consola, default as consola } from "consola";
 import { Status as Tweet } from "twitter-d";
 import { VideoVariant } from "twitter-d/types/video_variant";
-import { HTTPResponseError } from "./errors";
-import { calculateHDVideo, isFullUser } from "./util";
+import { HTTPResponseError } from "./errors.js";
+import { calculateHDVideo, isFullUser } from "./util.js";
 
 interface Arguments {
   tweetID: string;
