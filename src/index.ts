@@ -282,6 +282,7 @@ function runFfmpeg(tweet: Tweet, url: string): Promise<Tweet> {
   });
 }
 
+// TODO download all json, then download up to, say, 3 videos at once?
 function findNextTweet(tweet: Tweet): string {
   tweetCounter++;
 
